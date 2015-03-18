@@ -70,7 +70,6 @@ class balance(minqlbot.Plugin):
         self.suggested_pair = None
         self.suggested_agree = [False, False]
         self.majority_voting_list = []
-        self.majority_voting_threshold = 0.5
 
         self.rlock = RLock()
 
