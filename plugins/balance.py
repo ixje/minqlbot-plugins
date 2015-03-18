@@ -174,7 +174,7 @@ class balance(minqlbot.Plugin):
                 if len(self.majority_voting_list) / player_cnt >= threshold: 
                     self.cmd_do(player,msg, channel)
                 else:
-                    for cnt in xrange(1,player_cnt+1):
+                    for cnt in range(1,int(player_cnt)+1):
                         if cnt/player_cnt > threshold:
                             votes_to_go = cnt - len(self.majority_voting_list)
                             break
