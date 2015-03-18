@@ -577,8 +577,13 @@ class balance(minqlbot.Plugin):
             minimum_suggestion_diff = 25
 
         if switch and switch[1] >= minimum_suggestion_diff:
-            channel.reply("^7SUGGESTION: switch ^6{}^7 with ^6{}^7. Type !a to agree."
-                .format(switch[0][0].clean_name, switch[0][1].clean_name))
+            isMajorityVotingEnabled = config["Balance"].getboolean("MajorityVotingEnable", fallback=False)
+            if isMajorityVotingEnabled:
+                channel.reply("^7SUGGESTION: switch ^6{}^7 with ^6{}^7. Type !a to agree. (Majority vote: Enabled)"
+                    .format(switch[0][0].clean_name, switch[0][1].clean_name))
+            else:
+                channel.reply("^7SUGGESTION: switch ^6{}^7 with ^6{}^7. Type !a to agree."
+                    .format(switch[0][0].clean_name, switch[0][1].clean_name))
             if not self.suggested_pair or self.suggested_pair[0] != switch[0][0] or self.suggested_pair[1] != switch[0][1]:
                 self.suggested_pair = (switch[0][0], switch[0][1])
                 self.suggested_agree = [False, False]
