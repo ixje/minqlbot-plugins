@@ -176,7 +176,7 @@ class balance(minqlbot.Plugin):
                 else:
                     for cnt in xrange(1,player_cnt+1):
                         if cnt/player_cnt > threshold:
-                            votes_to_go = cnt - len(self.majority_voting_list))
+                            votes_to_go = cnt - len(self.majority_voting_list)
                             break
                     if votes_to_go <= 2:
                         channel.reply("^7Need {} more votes to enforce switching.".format(votes_to_go))
