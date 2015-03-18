@@ -69,6 +69,8 @@ class balance(minqlbot.Plugin):
 
         self.suggested_pair = None
         self.suggested_agree = [False, False]
+        self.majority_voting_list = []
+        self.majority_voting_threshold = 0.5
 
         self.rlock = RLock()
 
@@ -140,18 +142,46 @@ class balance(minqlbot.Plugin):
             self.switch(self.suggested_pair[0], self.suggested_pair[1])
             self.suggested_pair = None
             self.suggested_agree = [False, False]
+            self.majority_voting_list = None
 
     def cmd_agree(self, player, msg, channel):
-        if self.suggested_pair:
-            if self.suggested_pair[0] == player:
-                self.suggested_agree[0] = True
-            elif self.suggested_pair[1] == player:
-                self.suggested_agree[1] = True
-                
+        isMajorityVotingEnabled = False;
+
+        teams = self.teams()
+        activeplayers = teams["red"] + teams["blue"]
+        player_cnt = float(len(activeplayers))
+
+        config = minqlbot.get_config()
+
+        if "Balance" in config:
+            threshold = float(config["Balance"]["MajorityVotingThreshold"])
+            isMajorityVotingEnabled = config["Balance"].getboolean("MajorityVotingEnable")
+
+        if player in activeplayers: #filters out specs
+        
+            if self.suggested_pair:
+                if self.suggested_pair[0] == player:
+                    self.suggested_agree[0] = True
+                elif self.suggested_pair[1] == player:
+                    self.suggested_agree[1] = True
+
             if self.suggested_agree[0] and self.suggested_agree[1]:
-                self.switch(self.suggested_pair[0], self.suggested_pair[1])
-                self.suggested_pair = None
-                self.suggested_agree = [False, False]
+                 self.cmd_do(player,msg, channel)
+                 return
+
+            if isMajorityVotingEnabled and player not in self.majority_voting_list:
+                self.majority_voting_list.append(player)
+
+                if len(self.majority_voting_list) / player_cnt >= threshold: 
+                    self.cmd_do(player,msg, channel)
+                else:
+                    for cnt in xrange(1,player_cnt+1):
+                        if cnt/player_cnt > threshold:
+                            votes_to_go = cnt - len(self.majority_voting_list))
+                            break
+                    if votes_to_go <= 2:
+                        channel.reply("^7Need {} more votes to enforce switching.".format(votes_to_go))
+
 
     def cmd_setrating(self, player, msg, channel):
         if len(msg) < 3:
