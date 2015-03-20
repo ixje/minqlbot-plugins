@@ -141,7 +141,7 @@ class balance(minqlbot.Plugin):
             self.switch(self.suggested_pair[0], self.suggested_pair[1])
             self.suggested_pair = None
             self.suggested_agree = [False, False]
-            self.majority_voting_list = None
+            self.majority_voting_list = []
 
     def cmd_agree(self, player, msg, channel):
         isMajorityVotingEnabled = False;
