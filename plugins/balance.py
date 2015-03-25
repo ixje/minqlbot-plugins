@@ -59,6 +59,9 @@ class balance(minqlbot.Plugin):
         self.add_hook("vote_ended", self.handle_vote_ended)
         self.add_hook("player_connect", self.handle_player_connect)
         self.add_hook("team_switch", self.handle_team_switch)
+        self.add_hook("round_countdown", self.handle_round_countdown)
+        self.add_hook("game_start", self.handle_game_start)
+        self.add_hook("game_end", self.handle_game_end)
         self.add_command(("teams", "teens"), self.cmd_teams)
         self.add_command("balance", self.cmd_balance, 1)
         self.add_command("do", self.cmd_do, 1)
@@ -70,6 +73,8 @@ class balance(minqlbot.Plugin):
         self.suggested_pair = None
         self.suggested_agree = [False, False]
         self.majority_voting_list = []
+        self.suggested_in_round = None
+        self.current_round_number = 0
 
         self.rlock = RLock()
 
@@ -120,6 +125,41 @@ class balance(minqlbot.Plugin):
             gametype = self.game().short_type
             self.check_rating_requirements([player.clean_name.lower()], None, gametype)
 
+    def handle_game_start(self, game):
+        self.debug("Game start: resetting current_round_number to 1")
+        self.current_round_number = 1
+        self.reset_vote()
+
+    def handle_game_end(self,game,score,winner):
+        self.debug("Game end: resetting current_round_number to 1")
+        self.current_round_number = 1
+        self.reset_vote()
+
+    def handle_round_countdown(self,roundnumber):
+        self.debug("Round countdown: round number is {}".format(roundnumber))
+        self.current_round_number = roundnumber
+
+        if self.suggested_in_round:
+            #reset suggestion/vote if the suggested player didn't react within the round following that in which the vote happened
+            if roundnumber - self.suggested_in_round > 1:
+                if not self.suggested_agree[0] and not self.suggested_agree[1]:
+                    self.msg("^7Suggested players {} and {} did not agree to balance within the round limit.".format(self.suggested_pair[0], self.suggested_pair[1]))
+                elif not self.suggested_agree[0]:
+                    self.msg("^7Suggested player {} did not agree to balance within round the limit.".format(self.suggested_pair[0]))
+                elif not self.suggested_agree[1]:
+                    self.msg("^7Suggested player {} did not agree to balance within round the limit.".format(self.suggested_pair[1]))
+                self.msg("^7Resetting votes...")
+                self.reset_vote()
+                return
+
+            msg = "You have not yet agreed to the balance suggestion. Type !a to agree"
+            if not self.suggested_agree[0]:
+                self.debug("Reminding suggestion 0: {}".format(self.suggested_pair[0]))
+                self.tell(msg, self.suggested_pair[0])
+            if not self.suggested_agree[1]:
+                self.debug("Reminding suggestion 1: {}.".format(self.suggested_pair[1]))
+                self.tell(msg, self.suggested_pair[1])
+
     def cmd_teams(self, player, msg, channel):
         teams = self.teams()
         diff = len(teams["red"]) - len(teams["blue"])
@@ -139,9 +179,13 @@ class balance(minqlbot.Plugin):
     def cmd_do(self, player, msg, channel):
         if self.suggested_pair:
             self.switch(self.suggested_pair[0], self.suggested_pair[1])
+            self.reset_vote()
+
+    def reset_vote(self):
             self.suggested_pair = None
             self.suggested_agree = [False, False]
             self.majority_voting_list = []
+            self.suggested_in_round = None
 
     def cmd_agree(self, player, msg, channel):
         isMajorityVotingEnabled = False;
@@ -156,13 +200,13 @@ class balance(minqlbot.Plugin):
             threshold = float(config["Balance"]["MajorityVotingThreshold"])
             isMajorityVotingEnabled = config["Balance"].getboolean("MajorityVotingEnable")
 
-        if player in activeplayers: #filters out specs
+        if player in activeplayers and self.suggested_pair: #filters out specs
         
-            if self.suggested_pair:
-                if self.suggested_pair[0] == player:
-                    self.suggested_agree[0] = True
-                elif self.suggested_pair[1] == player:
-                    self.suggested_agree[1] = True
+            #if self.suggested_pair:
+            if self.suggested_pair[0] == player:
+                self.suggested_agree[0] = True
+            elif self.suggested_pair[1] == player:
+                self.suggested_agree[1] = True
 
             if self.suggested_agree[0] and self.suggested_agree[1]:
                  self.cmd_do(player,msg, channel)
@@ -178,8 +222,8 @@ class balance(minqlbot.Plugin):
                         if cnt/player_cnt > threshold:
                             votes_to_go = cnt - len(self.majority_voting_list)
                             break
-                    if votes_to_go <= 2:
-                        channel.reply("^7Need {} more votes to enforce switching.".format(votes_to_go))
+                    #if votes_to_go <= 2:
+                    channel.reply("^7Need {} more votes to enforce switching.".format(votes_to_go))
 
 
     def cmd_setrating(self, player, msg, channel):
@@ -587,6 +631,8 @@ class balance(minqlbot.Plugin):
             if not self.suggested_pair or self.suggested_pair[0] != switch[0][0] or self.suggested_pair[1] != switch[0][1]:
                 self.suggested_pair = (switch[0][0], switch[0][1])
                 self.suggested_agree = [False, False]
+            self.suggested_in_round = self.current_round_number
+            self.debug("New switch suggested in round {}".format(self.current_round_number))
         else:
             i = random.randint(0, 99)
             if not i:
