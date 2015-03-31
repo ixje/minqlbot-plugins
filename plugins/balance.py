@@ -139,6 +139,8 @@ class balance(minqlbot.Plugin):
         self.debug("Round countdown: round number is {}".format(roundnumber))
         self.current_round_number = roundnumber
 
+        config = minqlbot.get_config()
+
         if self.suggested_in_round:
             #reset suggestion/vote if the suggested player didn't react within the round following that in which the vote happened
             if roundnumber - self.suggested_in_round > 1:
@@ -159,6 +161,10 @@ class balance(minqlbot.Plugin):
             if not self.suggested_agree[1]:
                 self.debug("Reminding suggestion 1: {}.".format(self.suggested_pair[1]))
                 self.tell(msg, self.suggested_pair[1])
+
+            isMajorityVotingEnabled = config["Balance"].getboolean("MajorityVotingEnable")
+            if isMajorityVotingEnabled:
+                self.msg("^7Need {} more votes to enforce switching.".format(self.votesToGo()))
 
     def cmd_teams(self, player, msg, channel):
         teams = self.teams()
@@ -218,12 +224,7 @@ class balance(minqlbot.Plugin):
                 if len(self.majority_voting_list) / player_cnt >= threshold: 
                     self.cmd_do(player,msg, channel)
                 else:
-                    for cnt in range(1,int(player_cnt)+1):
-                        if cnt/player_cnt > threshold:
-                            votes_to_go = cnt - len(self.majority_voting_list)
-                            break
-                    #if votes_to_go <= 2:
-                    channel.reply("^7Need {} more votes to enforce switching.".format(votes_to_go))
+                    channel.reply("^7Need {} more votes to enforce switching.".format(self.votesToGo()))
 
 
     def cmd_setrating(self, player, msg, channel):
@@ -767,3 +768,20 @@ class balance(minqlbot.Plugin):
                 return False
 
             return True
+
+    def votesToGo(self):
+        teams = self.teams()
+        activeplayers = teams["red"] + teams["blue"]
+        player_cnt = float(len(activeplayers))
+
+        config = minqlbot.get_config()
+
+        if "Balance" in config:
+            threshold = float(config["Balance"]["MajorityVotingThreshold"])
+
+            for cnt in range(1,int(player_cnt)+1):
+                if cnt/player_cnt > threshold:
+                    votes_to_go = cnt - len(self.majority_voting_list)
+                    break
+            return votes_to_go
+        return None
