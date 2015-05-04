@@ -62,6 +62,8 @@ class balance(minqlbot.Plugin):
         self.add_hook("round_countdown", self.handle_round_countdown)
         self.add_hook("game_start", self.handle_game_start)
         self.add_hook("game_end", self.handle_game_end)
+        self.add_hook("round_start", self.handle_round_start)
+        self.add_hook("round_end", self.handle_round_end)
         self.add_command(("teams", "teens"), self.cmd_teams)
         self.add_command("balance", self.cmd_balance, 1)
         self.add_command("do", self.cmd_do, 1)
@@ -74,7 +76,10 @@ class balance(minqlbot.Plugin):
         self.suggested_agree = [False, False]
         self.majority_voting_list = []
         self.suggested_in_round = None
-        self.current_round_number = 0
+        self.current_round_number = 1
+
+        self.game_state = "Unknown"
+        self.queue_switch = None
 
         self.rlock = RLock()
 
@@ -125,18 +130,32 @@ class balance(minqlbot.Plugin):
             gametype = self.game().short_type
             self.check_rating_requirements([player.clean_name.lower()], None, gametype)
 
+    def handle_round_start(self, round):
+        self.debug("round start")
+        self.game_state = "round_started"
+
+    def handle_round_end(self, score, winner):
+        self.debug("round end")
+        self.game_state = "round_ended"
+        if self.queue_switch:
+            self.cmd_do(self.queue_switch[0],self.queue_switch[1],self.queue_switch[2])
+            self.queue_switch = None
+
     def handle_game_start(self, game):
         self.debug("Game start: resetting current_round_number to 1")
+        self.game_state = "game_start"
         self.current_round_number = 1
         self.reset_vote()
 
     def handle_game_end(self,game,score,winner):
         self.debug("Game end: resetting current_round_number to 1")
+        self.game_state = "game_end"
         self.current_round_number = 1
         self.reset_vote()
 
     def handle_round_countdown(self,roundnumber):
         self.debug("Round countdown: round number is {}".format(roundnumber))
+        self.game_state = "round_countdown"
         self.current_round_number = roundnumber
 
         config = minqlbot.get_config()
@@ -222,7 +241,12 @@ class balance(minqlbot.Plugin):
                 self.majority_voting_list.append(player)
 
                 if len(self.majority_voting_list) / player_cnt >= threshold: 
-                    self.cmd_do(player,msg, channel)
+                    
+                    if self.game_state != "round_started":
+                        self.cmd_do(player,msg, channel)
+                    else:
+                        channel.reply("^7Delaying player switch until round ended.")
+                        self.queue_switch = (player,msg, channel)
                 else:
                     channel.reply("^7Need {} more votes to enforce switching.".format(self.votesToGo()))
 
