@@ -1,25 +1,33 @@
 minqlbot-plugins
 ================
 
-A collection of plugins for minqlbot.
+All credits go to the original author Mino. Without his work on [minqlbot](https://github.com/MinoMino/minqlbot) there would be no place for plugins.
 
-This is a repository of the default config file, the database tables (including an initialized empty database),
-and more importantly the plugins themselves.
+For the latest version of the original plugins including bux fixes visit the [original plugins repository](https://github.com/MinoMino/minqlbot-plugins)
 
-Documentation will come later.
+What is this fork about?
+========================
 
-Installation
-============
+Here I publish plugins that extend or modify the base functionality of the administrator bot to my likings. Have a look at the table in the plugins section and see if find something you like as well.
 
-Look at the [main repository](https://github.com/MinoMino/minqlbot) for instructions on how to use the bot.
+### So many branches, whyyy?
+I like to work on plugins in total isolation. 
 
-Other Repositories
-==================
+Plugins
+=======
+The plugins in the table below can be found in this repo. You can navigate to them by following the links in the table or by manually changing the branch near the top of the page. Each plugin has it's own detailed description regarding functionality and installation instructions.
 
-My repository consists of plugins that agree with my idea of proper verbosity, behavior and so on. Thus, plugins by other authors that could be useful for you won't necessarily be here, so I recommend you take a look at the following repositories if there are any features you are missing, as they could possibly already have been implemented by someone else:
+|Branch|Status|Type|Description|
+---------------------------
+|[Majority vote balancing](https://github.com/ixje/minqlbot-plugins/tree/balance_majority_voting)|Tested|Modification|Added majority voting by configurable threshold and various tweaks|
+|[locker](https://github.com/ixje/minqlbot-plugins/tree/locker)|Experimental|Extension|Auto team (un)locking based on rules|
+|[leveller](https://github.com/ixje/minqlbot-plugins/tree/leveller)|Broken|Extension| Auto spectating last joiner/lowest score on unequal teams|
 
-* [ixje's fork](https://github.com/ixje/minqlbot-plugins)
-* [shamazar's fork](https://github.com/shamazar/minqlbot-plugins)
-* [WalkerX's fork](https://github.com/WalkerY/minqlbot-plugins)
-* [cstewart90's race plugin](https://github.com/cstewart90/minqlbot-race-plugin)
-* It also doesn't hurt checking if there's activity in any of the [other forks](https://github.com/MinoMino/minqlbot-plugins/network/members) that I haven't listed.
+
+Note: the master branch has no modifications besides this readme file  because apparently you're automatically redicted to the master branch when clicking a fork. 
+
+Thanks to
+=========
+**Mino** for creating the bot and answering my questions
+**Thaya** for running my plugins on his server (even when they're not always stable) and discussing plugin ideas
+**mitch** for answering my questions when Mino is afk
