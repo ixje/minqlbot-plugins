@@ -18,7 +18,7 @@ Plugins
 The plugins in the table below can be found in this repo. You can navigate to them by following the links in the table or by manually changing the branch near the top of the page. Each plugin has it's own detailed description regarding functionality and installation instructions.
 
 |Branch|Status|Type|Description|
----------------------------
+|------|------|----|-----------|
 |[Majority vote balancing](https://github.com/ixje/minqlbot-plugins/tree/balance_majority_voting)|Tested|Modification|Added majority voting by configurable threshold and various tweaks|
 |[locker](https://github.com/ixje/minqlbot-plugins/tree/locker)|Experimental|Extension|Auto team (un)locking based on rules|
 |[leveller](https://github.com/ixje/minqlbot-plugins/tree/leveller)|Broken|Extension| Auto spectating last joiner/lowest score on unequal teams|
@@ -28,6 +28,7 @@ Note: the master branch has no modifications besides this readme file  because a
 
 Thanks to
 =========
-**Mino** for creating the bot and answering my questions
-**Thaya** for running my plugins on his server (even when they're not always stable) and discussing plugin ideas
-**mitch** for answering my questions when Mino is afk
+
+* **Mino** for creating the bot and answering my questions
+* **Thaya** for running my plugins on his server (even when they're not always stable) and discussing plugin ideas
+* **mitch** for answering my questions when Mino is afk
