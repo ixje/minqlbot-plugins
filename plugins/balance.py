@@ -79,7 +79,7 @@ class balance(minqlbot.Plugin):
         self.current_round_number = 1
 
         self.game_state = "Unknown"
-        self.queue_switch = None
+        self.switch_queue = None
 
         self.rlock = RLock()
 
@@ -137,9 +137,9 @@ class balance(minqlbot.Plugin):
     def handle_round_end(self, score, winner):
         self.debug("round end")
         self.game_state = "round_ended"
-        if self.queue_switch:
-            self.cmd_do(self.queue_switch[0],self.queue_switch[1],self.queue_switch[2])
-            self.queue_switch = None
+        if self.switch_queue:
+            self.cmd_do(self.switch_queue[0],self.switch_queue[1],self.switch_queue[2])
+            self.switch_queue = None
 
     def handle_game_start(self, game):
         self.debug("Game start: resetting current_round_number to 1")
@@ -234,8 +234,11 @@ class balance(minqlbot.Plugin):
                 self.suggested_agree[1] = True
 
             if self.suggested_agree[0] and self.suggested_agree[1]:
-                 self.cmd_do(player,msg, channel)
-                 return
+                if self.game_state != "round_started":
+                    self.cmd_do(player,msg, channel)
+                else:
+                    self.switch_queue = (player,msg, channel)
+                    return
 
             if isMajorityVotingEnabled and player not in self.majority_voting_list:
                 self.majority_voting_list.append(player)
@@ -246,7 +249,7 @@ class balance(minqlbot.Plugin):
                         self.cmd_do(player,msg, channel)
                     else:
                         channel.reply("^7Delaying player switch until round ended.")
-                        self.queue_switch = (player,msg, channel)
+                        self.switch_queue = (player,msg, channel)
                 else:
                     channel.reply("^7Need {} more votes to enforce switching.".format(self.votesToGo()))
 
