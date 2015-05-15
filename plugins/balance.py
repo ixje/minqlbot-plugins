@@ -59,6 +59,9 @@ class balance(minqlbot.Plugin):
         self.add_hook("vote_ended", self.handle_vote_ended)
         self.add_hook("player_connect", self.handle_player_connect)
         self.add_hook("team_switch", self.handle_team_switch)
+        self.add_hook("round_start", self.handle_round_start)
+        self.add_hook("round_end", self.handle_round_end)
+        self.add_hook("game_end", self.handle_game_end)
         self.add_command(("teams", "teens"), self.cmd_teams)
         self.add_command("balance", self.cmd_balance, 1)
         self.add_command("do", self.cmd_do, 1)
@@ -69,6 +72,9 @@ class balance(minqlbot.Plugin):
 
         self.suggested_pair = None
         self.suggested_agree = [False, False]
+
+        self.switch_queue = None
+        self.game_state = "Unknown"
 
         self.rlock = RLock()
 
@@ -119,6 +125,18 @@ class balance(minqlbot.Plugin):
             gametype = self.game().short_type
             self.check_rating_requirements([player.clean_name.lower()], None, gametype)
 
+    def handle_round_start(self, round):
+        self.game_state = "round_started"
+
+    def handle_round_end(self, score, winner):
+        self.game_state = "round_ended"
+        if self.switch_queue:
+            self.cmd_do(self.switch_queue[0],self.switch_queue[1],self.switch_queue[2])
+            self.switch_queue = None
+
+    def handle_game_end(self,game,score,winner):
+        self.game_state = "game_ended"
+
     def cmd_teams(self, player, msg, channel):
         teams = self.teams()
         diff = len(teams["red"]) - len(teams["blue"])
@@ -149,9 +167,10 @@ class balance(minqlbot.Plugin):
                 self.suggested_agree[1] = True
                 
             if self.suggested_agree[0] and self.suggested_agree[1]:
-                self.switch(self.suggested_pair[0], self.suggested_pair[1])
-                self.suggested_pair = None
-                self.suggested_agree = [False, False]
+                if self.game_state != "round_started":
+                    self.cmd_do(player, msg, channel)
+                else:
+                    self.switch_queue = (player, msg, channel)
 
     def cmd_setrating(self, player, msg, channel):
         if len(msg) < 3:
