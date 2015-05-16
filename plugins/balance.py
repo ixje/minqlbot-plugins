@@ -186,6 +186,7 @@ class balance(minqlbot.Plugin):
                 self.msg("^7Need {} more votes to enforce switching.".format(self.votesToGo()))
 
     def cmd_teams(self, player, msg, channel):
+        self.reset_vote()
         teams = self.teams()
         diff = len(teams["red"]) - len(teams["blue"])
         if not diff:
